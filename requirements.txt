@@ -1,0 +1,15 @@
+# OpenAI Agents with MCP support
+git+https://github.com/openai/openai-agents-python.git
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# Observability and Metrics
+langfuse>=2.0.0
+
+# Core dependencies (installed automatically with openai-agents)
+# openai>=2.4.0
+# mcp>=1.18.0
+# pydantic>=2.12.2
+# httpx>=0.28.1
+# anyio>=4.11.0
