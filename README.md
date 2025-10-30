@@ -70,6 +70,10 @@ Once completed, it it create a local MCP server in ~/Postman/mcp-servers. We wil
 ![MCP Server](images/am-mcp.png)
 
 
+### Role Based Security
+Postman makes it easy to manage who has access to change your APIs and collections via role-based security. For example, let's say you wanted to restrict which team members can edit the Coding Resources API Collection, you can specifiy this as a [Collection role.](https://learning.postman.com/docs/administration/roles-and-permissions/#element-based-roles) 
+
+
 ### 1. Clone and Setup Environment
 With the MCP server created and downloaded locally, create the agent. Clone the repo and follow the instructions below. 
 
