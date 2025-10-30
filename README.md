@@ -75,7 +75,7 @@ With the MCP server created and downloaded locally, create the agent. Clone the 
 
 ```bash
 # Navigate to project directory
-cd coding-bot
+cd learntocode-agent
 
 # Create virtual environment with uv
 uv venv --python python3.11
