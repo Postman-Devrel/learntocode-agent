@@ -33,7 +33,7 @@ async def run_coding_teacher_agent(user_query: str, mcp_server):
     
     # Update generation with model info
     langfuse.update_current_generation(
-        model="gpt-4o",  # Specify the model being used
+        model="gpt-5",  # Specify the model being used
         input=user_query,
         metadata={"agent": "CodingTeacher"}
     )
@@ -57,13 +57,15 @@ async def run_coding_teacher_agent(user_query: str, mcp_server):
 @observe()
 def evaluate_response(query: str, response: str, language: str):
     """
-    Evaluate the quality of the agent's response.
+    Evaluate the quality of the agent's response and send scores to Langfuse.
     
     Args:
         query: The user's query
         response: The agent's response
         language: The programming language being queried
     """
+    langfuse = get_client()
+    
     # Basic evaluation metrics
     metrics = {
         "response_length": len(response),
@@ -76,6 +78,40 @@ def evaluate_response(query: str, response: str, language: str):
     query_keywords = [language.lower(), "course", "learn", "coding"]
     matches = sum(1 for keyword in query_keywords if keyword.lower() in response.lower())
     metrics["relevance_score"] = matches / len(query_keywords)
+    
+    # Send custom scores to Langfuse using context-based scoring
+    if LANGFUSE_ENABLED:
+        # Score 1: Response Length (numeric)
+        langfuse.score_current_trace(
+            name="response_length",
+            value=float(metrics["response_length"]),
+            data_type="NUMERIC",
+            comment=f"Response contains {metrics['response_length']} characters"
+        )
+        
+        # Score 2: Contains Language Reference (boolean)
+        langfuse.score_current_trace(
+            name="contains_language",
+            value=1.0 if metrics["contains_language"] else 0.0,
+            data_type="BOOLEAN",
+            comment=f"Response {'includes' if metrics['contains_language'] else 'does not include'} {language} reference"
+        )
+        
+        # Score 3: Has Course Information (boolean)
+        langfuse.score_current_trace(
+            name="has_courses",
+            value=1.0 if metrics["has_courses"] else 0.0,
+            data_type="BOOLEAN",
+            comment="Response includes course information"
+        )
+        
+        # Score 4: Relevance Score (numeric, 0.0-1.0)
+        langfuse.score_current_trace(
+            name="relevance_score",
+            value=metrics["relevance_score"],
+            data_type="NUMERIC",
+            comment=f"Relevance calculated based on keyword matches: {metrics['relevance_score']:.2%}"
+        )
     
     return metrics
 

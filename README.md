@@ -1,25 +1,77 @@
-# Coding Teacher Agent with MCP and Langfuse
+# Reliable Agent Blueprint with Postman & Langfuse
+A started AI agent to share  resources (videos, tutorials, units etc) for someone looking to learn how to code.  This app is designed to demonstrate the key requirements on how to make a reliable AI agent that solves common production requirements.
 
-An AI-powered coding teacher agent that uses the OpenAI Agents SDK with MCP (Model Context Protocol) integration and comprehensive observability through Langfuse.
 
 ## Features
 
 - 🤖 **Intelligent Course Recommendations**: Queries coding resources and filters results based on user intent
 - 🔌 **MCP Integration**: Connects to Postman MCP servers to access external tools and resources
-- 📊 **Full Observability**: Complete tracing and metrics with Langfuse
-- 📈 **Automated Evaluations**: Built-in response quality evaluation
-- 🎯 **Relevance Scoring**: Automatic scoring of response relevance and completeness
+- 🎛️ **API Governance**: Uses Postman Role Based Access Controls (RBAC) to protect from data leakage into public LLMs
+- ⚙️ **API Availability & Discovery**: API testing, documentation, monitoring, and collections via Postman to ensure API availability and easy of discovery within an organization. 
+- 📊 **Full Observability**: Complete tracing, metrics, and token cost with Langfuse
+- 📈 **Evaluations & Consistency**: Built-in response quality evaluation
+- 🎯 **Relevance Scoring**: Automatic scoring of response relevance and completeness, including LLM-as-a-Judge. 
+
 
 ## Prerequisites
 
 - Python 3.11 or higher
 - Node.js (for MCP server)
-- OpenAI API key
+- OpenAI API key 
 - Langfuse account (free at https://cloud.langfuse.com)
+- Postman account (free at https://identity.getpostman.com/signup?utm_source=cookbook)
 
-## Installation
+## Postman Setup
+
+
+### Add Coding Resources API Collection
+Within your workspace, tap agent mode and enter the following prompt:
+
+`"Create an API collection from https://api.sampleapis.com/codingresources/"`
+
+Once this is complete you should now see a new collection in your workspace. If you tap in there will be Get Coding Resources GET request. This is the endpoint our AI agent will use to gather lessons and learning resources. In a full app, you may have multiple API Collections and endpoints to learning platforms, free website courses etc. 
+
+### Create Unit Tests & Documentation
+To ensure your agent works consistently, the APIs you rely on must be available and work as expected. Adding unit tests and documententation ensure they function as designed, and if anything changes, you know about it. 
+
+Within your workspace, tap agent mode and enter the following prompt:
+
+`"Add unit tests and documentation to the Coding Resources API Collection"`
+
+Once completed, you can tap on the Get Coding Resources GET request, then the Scripts tab to see the generated API test. Make sure they all run and pass correctly. 
+
+![Unit tests](images/unit-tests.gif)
+
+### Add Monitoring & Alerts
+The last thing you need to do in your Postman environment is add monitoring and alerts to your API collection to ensure quality and availability of the API services. 
+
+Within your workspace, tap agent model and enter the following prompt:
+
+`"add monitoring to the Coding Resources API and set an alert if the monitor detects my collection is unhealthy. I want it to run every 10 minutes, and send alerts to your@email.com"`
+
+Once completed, tap monitors on the left navigation to see your dashboard. 
+
+![Monitors](images/monitors.png)
+
+### Postman skills
+The list of activities above provide a solid baseline to ensure API health and reliability. Postman recently launched skills. Skills allow developers to leverage Postman best practices via a slash command in a prompt. Check out the [docs for detailed examples.](https://learning.postman.com/docs/agent-mode/overview/#skills). 
+
+![Postman Skills](images/postman-skills.png)
+
+### MCP Server
+Once you have the Postman workspace created and API healthchecks in place, create an MCP server from the API Collection.
+
+Within your workspace, tap agent model and enter the following prompt:
+
+`"Create an MCP server from this collection"`
+
+Once completed, it it create a local MCP server in ~/Postman/mcp-servers. We will use this shortly. 
+
+![MCP Server](images/am-mcp.png)
+
 
 ### 1. Clone and Setup Environment
+With the MCP server created and downloaded locally, create the agent. Clone the repo and follow the instructions below. 
 
 ```bash
 # Navigate to project directory
@@ -55,6 +107,20 @@ LANGFUSE_HOST=https://cloud.langfuse.com
 3. Create a new project
 4. Go to Settings → API Keys
 5. Copy your Public Key and Secret Key
+
+### 3. Update with MCP server
+Open main.py and scroll till you find the MCP call. Change the absolute path to match where you downloaded the MCP server. 
+```python
+
+mcp = MCPServerStdio(
+        name="postman-mcp",
+        params={
+            "command": "node",
+            "args": ["/Users/your-home-dir/Postman/mcp-servers/mcp-coding-resources-mcp-server-ML5GOBMY/mcpServer.js"]
+        }
+    )
+
+```
 
 ## Usage
 
@@ -238,122 +304,3 @@ agent = Agent(
 )
 ```
 
-## Project Structure
-
-```
-coding-bot/
-├── .env                    # API keys and configuration (DO NOT commit!)
-├── .gitignore             # Git ignore rules
-├── main.py                # Main agent code with Langfuse integration
-├── requirements.txt       # Python dependencies
-├── README.md             # This file
-└── .venv/                # Virtual environment
-```
-
-## Langfuse Dashboard Features
-
-### Traces Tab
-- View all agent executions
-- Filter by tags, users, or metadata
-- Analyze latency and performance
-
-### Sessions Tab
-- Group related conversations
-- Track multi-turn interactions
-
-### Scores Tab
-- View evaluation metrics
-- Analyze quality trends over time
-
-### Analytics
-- Token usage tracking
-- Cost analysis
-- Performance metrics
-
-## Advanced Features
-
-### Adding More MCP Servers
-
-You can connect to multiple MCP servers:
-
-```python
-mcp1 = MCPServerStdio(name="server1", params={...})
-mcp2 = MCPServerStdio(name="server2", params={...})
-
-agent = Agent(
-    name="MyAgent",
-    mcp_servers=[mcp1, mcp2]
-)
-```
-
-### Custom Metadata and Tags
-
-Enhance observability with custom metadata:
-
-```python
-langfuse_context.update_current_trace(
-    name="custom_trace",
-    user_id="user_123",
-    metadata={
-        "custom_field": "value",
-        "environment": "production"
-    },
-    tags=["custom-tag", "feature-x"]
-)
-```
-
-### Batch Evaluations
-
-Run evaluations on multiple queries:
-
-```python
-queries = [
-    "Python courses",
-    "JavaScript tutorials",
-    "Web development resources"
-]
-
-for query in queries:
-    result = await run_coding_teacher_agent(query, mcp)
-    evaluation = await evaluate_response(query, result.final_output)
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **"OPENAI_API_KEY not set"**
-   - Ensure `.env` file has your OpenAI API key
-   - Verify the file is in the project root
-
-2. **"Langfuse authentication failed"**
-   - Check your Langfuse public and secret keys
-   - Verify the host URL is correct
-
-3. **"MCP server connection failed"**
-   - Ensure Node.js is installed
-   - Verify the MCP server path is correct
-   - Check if the server is running
-
-4. **"Module not found"**
-   - Activate virtual environment: `source .venv/bin/activate`
-   - Reinstall dependencies: `uv pip install -r requirements.txt`
-
-## Contributing
-
-Feel free to extend this agent with:
-- More evaluation metrics
-- Additional MCP servers
-- Custom scoring functions
-- Enhanced error handling
-
-## Resources
-
-- [OpenAI Agents SDK](https://github.com/openai/openai-agents-python)
-- [Langfuse Documentation](https://langfuse.com/docs)
-- [MCP Protocol](https://modelcontextprotocol.io/)
-- [OpenAI API](https://platform.openai.com/docs)
-
-## License
-
-MIT
